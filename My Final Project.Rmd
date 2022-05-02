@@ -41,6 +41,8 @@ library(fixest)
 library(dotwhisker)
 library(psych)
 library(vtable)
+library(ggbeeswarm)
+library(ggnormalviolin)
 
 HCRIS_Data_v1996 <- readRDS("/Users/laurenstekler/Desktop/HCRIS_Data_V1996.rds")
 
@@ -291,12 +293,12 @@ fig.debt <- debt.data %>%
   )  
 
 ```
+
 # Violin Plot of Bad debt in Expansion States versus Non-Expansion States
 ```{r}
-ggplot(hcris.dat.merged, aes(x=expand_ever, y=baddebtoperating)) + 
-  geom_violin(stat="identity")
+ggplot(hcris.dat.merged, aes(x=expand_ever, y=baddebtoperating)) + geom_violin(stat="identity")
 
-p <- ggplot(hcris.dat.merged, aes(x=expand_ever, y=baddebtoperating, fill=expand_ever)) + ylim (0, .8) +geom_violin() 
+p <- ggplot(hcris.dat.merged, aes(x=expand_ever, y=baddebtoperating, fill=expand_ever)) + ylim (0, .8) + geom_violin() 
 ```
 
 
@@ -317,32 +319,28 @@ ggplot(data=hcris.plot.dat.merged, aes(x=year, y=mean, group=expand_ever, linety
 
 ```
 
-# Plotting the top five states that show the greatest decrease in bad debt over time
-```{r}
-```
 
-
-# Estimating the effect of Medicaid expansion on bad debt using a standard DD regression estimator, again focusing only on hospitals/states that expanded in 2014 versus those that never expanded
+# Estimating the effect of Medicaid expansion on bad debt using a difference-in-differences regression estimator. Only  focusing  on hospitals/states that expanded in 2014 versus those that never expanded. 
 ```{r}
 
 summary(lm(baddebtoperating ~ post + expand_ever + treat, data=hcris.dat.2014.merged))
 
 ```
 
-# Include hospital and year fixed effects in your estimates. 
+# Including hospital and year fixed effects in the estimates. 
 ```{r}
 summary(felm(baddebtoperating ~ treat | factor (provider_number) + factor(year), data = hcris.dat.2014.merged))
 
 ```
 
-# Repeat the analysis in question 3 but include all states (even those that expanded after 2014).
+# Repeating the analysis above, but including all states (even those that expanded after 2014).
 ```{r}
 
 summary(felm(baddebtoperating ~ treat | factor (provider_number) + factor(year), data = hcris.dat.merged))
 
 ```
 
-#  Provide an “event study” graph showing the effects of Medicaid expansion in each year. Use the specification that includes state and year fixed effects, limited to states that expanded in 2014 or never expanded
+#  Creating an “event study” graph showing the effects of Medicaid expansion in each year. Only for hospitals/states that expanded in 2014 versus hospitals/states that never expanded. 
 ```{r}
 
 event.dat <- hcris.dat.2014.merged %>%
@@ -401,6 +399,7 @@ dwplot(event.plot.dat,
 ```
 #### Part 2: Analyzing Heterogeneity: Bed Size ####
 ```{r}
+# Creating a scatterplot
 ggplot(hcris.dat.merged, aes(x=baddebtoperating, y=beds, color=expand_ever), na.rm = TRUE) + 
     geom_point(size=0.5) +
   ylim(0, 2000) +
@@ -458,20 +457,20 @@ ggplot(data=hcris.plot.dat.merged.baddebt2, aes(x=year, y=mean, group=expand_eve
     Title = "Portion of Uninsured Over Time")
 
 ```
-# Estimating the effect of Medicaid expansion on bad debt using a standard DD regression estimator, again focusing only on hospitals/states that expanded in 2014 versus those that never expanded
+# Estimating the effect of Medicaid expansion on bad debt using a difference-in-differenecs regression estimator. Only focusing on hospitals/states that expanded in 2014 versus those that never expanded.
 ```{r}
 
 summary(lm(baddebtoperating ~ post + expand_ever + treat, data=hcris.dat.2014.merged.baddebt2))
 
 ```
 
-# Include hospital and year fixed effects in your estimates. 
+# Including hospital and year fixed effects in the regerssion above.  
 ```{r}
 summary(felm(baddebtoperating ~ treat | factor (provider_number) + factor(year), data = hcris.dat.2014.merged.baddebt2))
 
 ```
 
-# Repeat the analysis in question 3 but include all states (even those that expanded after 2014).
+# Repeat the analysis above, but including all states (even those that expanded after 2014).
 ```{r}
 
 summary(felm(baddebtoperating ~ treat | factor (provider_number) + factor(year), data = hcris.dat.merged.baddebt2))
