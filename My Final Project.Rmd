@@ -43,6 +43,7 @@ library(psych)
 library(vtable)
 library(ggbeeswarm)
 library(ggnormalviolin)
+library(modelsummary)
 
 HCRIS_Data_v1996 <- readRDS("/Users/laurenstekler/Desktop/HCRIS_Data_V1996.rds")
 
@@ -296,9 +297,16 @@ fig.debt <- debt.data %>%
 
 # Violin Plot of Bad debt in Expansion States versus Non-Expansion States
 ```{r}
-ggplot(hcris.dat.merged, aes(x=expand_ever, y=baddebtoperating)) + geom_violin(stat="identity")
 
-p <- ggplot(hcris.dat.merged, aes(x=expand_ever, y=baddebtoperating, fill=expand_ever)) + ylim (0, .8) + geom_violin() 
+j <- ggplot(hcris.dat.merged %>% filter(!is.na(expand_ever)), aes(x=expand_ever, y=baddebtoperating, fill=expand_ever)) + ylim (0, .8) +
+  geom_violin() + labs(
+  x = "Expanded",
+  y = "Bad Debt",
+  title = "Distribution of Bad Debt for Expansion and Non-Expansion States"
+) 
+
+j
+
 ```
 
 
@@ -314,8 +322,8 @@ ggplot(data=hcris.plot.dat.merged, aes(x=year, y=mean, group=expand_ever, linety
   guides(linetype="none")  +
   labs(
     x= "Year",
-    y = "Portion of Uninsured",
-    Title = "Portion of Uninsured Over Time")
+    y = "Bad Debt",
+    Title = "Bad Debt Over Time for Expansion and Non-Expansion States")
 
 ```
 
@@ -338,7 +346,21 @@ summary(felm(baddebtoperating ~ treat | factor (provider_number) + factor(year),
 
 summary(felm(baddebtoperating ~ treat | factor (provider_number) + factor(year), data = hcris.dat.merged))
 
+
 ```
+
+# Putting all these results into one table
+```{r}
+TreatmentEffect <- c(-0.033641, -0.032638, 0.02467)
+StandardError <- c(0.003732, 0.003262, 0.09206)
+Regression <- c("Only Hospitals That Expanded in 2014","Fixed Effects","All States")
+
+df <- data.frame(Regression, TreatmentEffect, StandardError)
+
+knitr::kable(df)
+
+```
+
 
 #  Creating an “event study” graph showing the effects of Medicaid expansion in each year. Only for hospitals/states that expanded in 2014 versus hospitals/states that never expanded. 
 ```{r}
@@ -400,19 +422,18 @@ dwplot(event.plot.dat,
 #### Part 2: Analyzing Heterogeneity: Bed Size ####
 ```{r}
 # Creating a scatterplot
-ggplot(hcris.dat.merged, aes(x=baddebtoperating, y=beds, color=expand_ever), na.rm = TRUE) + 
+z <- ggplot(hcris.dat.merged  %>% filter(!is.na(expand_ever)), aes(x=baddebtoperating, y=beds, color=expand_ever), na.rm = TRUE) + 
     geom_point(size=0.5) +
   ylim(0, 2000) +
   xlim(0, 1.25) + 
-    theme_ipsum()  
+    theme_ipsum() + 
+  labs(
+    y = "Bed Size",
+    x = "Bad Debt",
+    Title = "Correlation Between Bed Size and Bad Debt for Expansion and Non-Expansion States"
+  )
 
-
-ggplot(hcris.dat.merged, aes(x=baddebtoperating, y=beds, color=expand_ever), na.rm = TRUE) + 
-    geom_point(size=0.5) +
-  ylim(0, 2000) +
-  xlim(0, 1.25) + 
-    theme_ipsum() 
-
+z
 
 ```
 
@@ -464,15 +485,4 @@ summary(lm(baddebtoperating ~ post + expand_ever + treat, data=hcris.dat.2014.me
 
 ```
 
-# Including hospital and year fixed effects in the regerssion above.  
-```{r}
-summary(felm(baddebtoperating ~ treat | factor (provider_number) + factor(year), data = hcris.dat.2014.merged.baddebt2))
 
-```
-
-# Repeat the analysis above, but including all states (even those that expanded after 2014).
-```{r}
-
-summary(felm(baddebtoperating ~ treat | factor (provider_number) + factor(year), data = hcris.dat.merged.baddebt2))
-
-```
